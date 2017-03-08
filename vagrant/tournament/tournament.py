@@ -77,7 +77,7 @@ def playerStandings(**kw):
         wins: the number of matches the player has won
         matches: the number of matches the player has played
     """
-    kw['cursor'].execute('select * from Standings')
+    kw['cursor'].execute('select * from V_Standings')
     return kw['cursor'].fetchall()
 
 
@@ -112,7 +112,7 @@ def swissPairings(**kw):
     """
     pairings = []
     cursor = kw['cursor']
-    cursor.execute('select * from Standings')
+    cursor.execute('select * from V_Standings')
     players = cursor.fetchmany(2)
     while players:
         (p1, p2) = players

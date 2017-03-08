@@ -25,7 +25,7 @@ CREATE TABLE Matches (
 
 -- Returns a list of all the players with the number of wins
 -- and losses respectively.
-CREATE VIEW Players_Records AS
+CREATE VIEW V_Players_Records AS
 select Players.id,
        coalesce(wins.total, 0) as wins,
        coalesce(losses.total, 0) as losses
@@ -42,11 +42,11 @@ select Players.id,
 
 -- Returns a list of all the players with the number of wins
 -- and total matches they've played sorted by number of wins.
-CREATE VIEW Standings AS
+CREATE VIEW V_Standings AS
   select Players.id,
          Players.name,
-         Players_Records.wins,
-         Players_Records.wins + Players_Records.losses as matches
-    from Players, Players_Records
-    where Players.id = Players_Records.id
-    order by Players_Records.wins desc;
+         V_Players_Records.wins,
+         V_Players_Records.wins + V_Players_Records.losses as matches
+    from Players, V_Players_Records
+    where Players.id = V_Players_Records.id
+    order by V_Players_Records.wins desc;
