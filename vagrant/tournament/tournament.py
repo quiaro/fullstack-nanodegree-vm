@@ -1,9 +1,25 @@
 #!/usr/bin/env python
-# 
+#
 # tournament.py -- implementation of a Swiss-system tournament
 #
 
 import psycopg2
+import psycopg2.extras
+
+
+def setup_db(f):
+    """Decorator responsible for managing the connection to the DB
+
+    Opens the connection to the DB, provides a function with a
+    reference to the cursor and the DB. After the function is called,
+    closes the DB connection and returns the function's return value."""
+    def db_operation(*args):
+        db = connect()
+        c = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        res = f(*args, cursor=c, db=db)
+        db.close()
+        return res
+    return db_operation
 
 
 def connect():
@@ -11,30 +27,44 @@ def connect():
     return psycopg2.connect("dbname=tournament")
 
 
-def deleteMatches():
+@setup_db
+def deleteMatches(**kw):
     """Remove all the match records from the database."""
+    kw['cursor'].execute('delete from match')
+    kw['db'].commit()
 
 
-def deletePlayers():
+@setup_db
+def deletePlayers(**kw):
     """Remove all the player records from the database."""
+    kw['cursor'].execute('delete from player')
+    kw['db'].commit()
 
 
-def countPlayers():
+@setup_db
+def countPlayers(**kw):
     """Returns the number of players currently registered."""
+    kw['cursor'].execute('select count(*) as num_players from player')
+    num = kw['cursor'].fetchone()
+    return int(num['num_players'])
 
 
-def registerPlayer(name):
+@setup_db
+def registerPlayer(name, **kw):
     """Adds a player to the tournament database.
-  
+
     The database assigns a unique serial id number for the player.  (This
     should be handled by your SQL database schema, not in your Python code.)
-  
+
     Args:
       name: the player's full name (need not be unique).
     """
+    kw['cursor'].execute('insert into player (name) values (%s)', (name,))
+    kw['db'].commit()
 
 
-def playerStandings():
+@setup_db
+def playerStandings(**kw):
     """Returns a list of the players and their win records, sorted by wins.
 
     The first entry in the list should be the player in first place, or a player
@@ -47,6 +77,8 @@ def playerStandings():
         wins: the number of matches the player has won
         matches: the number of matches the player has played
     """
+    kw['cursor'].execute('select * from standings')
+    return kw['cursor'].fetchall()
 
 
 def reportMatch(winner, loser):
@@ -56,16 +88,16 @@ def reportMatch(winner, loser):
       winner:  the id number of the player who won
       loser:  the id number of the player who lost
     """
- 
- 
+
+
 def swissPairings():
     """Returns a list of pairs of players for the next round of a match.
-  
+
     Assuming that there are an even number of players registered, each player
     appears exactly once in the pairings.  Each player is paired with another
     player with an equal or nearly-equal win record, that is, a player adjacent
     to him or her in the standings.
-  
+
     Returns:
       A list of tuples, each of which contains (id1, name1, id2, name2)
         id1: the first player's unique id
@@ -73,5 +105,3 @@ def swissPairings():
         id2: the second player's unique id
         name2: the second player's name
     """
-
-
