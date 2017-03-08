@@ -6,22 +6,20 @@
 -- You can write comments in this file by starting them with two dashes, like
 -- these lines here.
 
-CREATE TABLE IF NOT EXISTS player  (
+DROP DATABASE tournament;
+CREATE DATABASE tournament;
+\c tournament;
+
+CREATE TABLE player  (
   id SERIAL PRIMARY KEY,
   name TEXT
 );
 
-CREATE TABLE IF NOT EXISTS match (
+CREATE TABLE match (
   id SERIAL PRIMARY KEY,
   winner INTEGER REFERENCES player(id) ON DELETE SET NULL,
   loser INTEGER REFERENCES player(id) ON DELETE SET NULL
 );
-
-CREATE TABLE IF NOT EXISTS tournament (
-  id SERIAL PRIMARY KEY,
-  match_id INTEGER REFERENCES match(id) ON DELETE CASCADE
-);
-
 
 -- Returns a list of all the players with the number of wins
 -- and losses respectively.
@@ -50,10 +48,3 @@ CREATE VIEW standings AS
     from player, player_record
     where player.id = player_record.id
     order by player_record.wins desc;
-
--- Clean up
--- DROP VIEW standings;
--- DROP VIEW player_record;
--- DROP TABLE tournament;
--- DROP TABLE match;
--- DROP TABLE player;
