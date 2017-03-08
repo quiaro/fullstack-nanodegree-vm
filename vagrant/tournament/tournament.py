@@ -7,10 +7,10 @@ import psycopg2
 import psycopg2.extras
 
 
-def setup_db(f):
-    """Decorator responsible for managing the connection to the DB
+def setup_tear_db(f):
+    """Decorator responsible for creating and closing a connection to the DB
 
-    Opens the connection to the DB, provides a function with a
+    Opens the connection to the DB and provides a function with a
     reference to the cursor and the DB. After the function is called,
     closes the DB connection and returns the function's return value."""
     def db_operation(*args):
@@ -27,21 +27,21 @@ def connect():
     return psycopg2.connect("dbname=tournament")
 
 
-@setup_db
+@setup_tear_db
 def deleteMatches(**kw):
     """Remove all the match records from the database."""
     kw['cursor'].execute('delete from match')
     kw['db'].commit()
 
 
-@setup_db
+@setup_tear_db
 def deletePlayers(**kw):
     """Remove all the player records from the database."""
     kw['cursor'].execute('delete from player')
     kw['db'].commit()
 
 
-@setup_db
+@setup_tear_db
 def countPlayers(**kw):
     """Returns the number of players currently registered."""
     kw['cursor'].execute('select count(*) as num_players from player')
@@ -49,7 +49,7 @@ def countPlayers(**kw):
     return int(num['num_players'])
 
 
-@setup_db
+@setup_tear_db
 def registerPlayer(name, **kw):
     """Adds a player to the tournament database.
 
@@ -63,7 +63,7 @@ def registerPlayer(name, **kw):
     kw['db'].commit()
 
 
-@setup_db
+@setup_tear_db
 def playerStandings(**kw):
     """Returns a list of the players and their win records, sorted by wins.
 
@@ -81,16 +81,21 @@ def playerStandings(**kw):
     return kw['cursor'].fetchall()
 
 
-def reportMatch(winner, loser):
+@setup_tear_db
+def reportMatch(winner, loser, **kw):
     """Records the outcome of a single match between two players.
 
     Args:
       winner:  the id number of the player who won
       loser:  the id number of the player who lost
     """
+    kw['cursor'].execute(
+        'insert into match (winner, loser) values (%s, %s)', (winner, loser))
+    kw['db'].commit()
 
 
-def swissPairings():
+@setup_tear_db
+def swissPairings(**kw):
     """Returns a list of pairs of players for the next round of a match.
 
     Assuming that there are an even number of players registered, each player
@@ -105,3 +110,12 @@ def swissPairings():
         id2: the second player's unique id
         name2: the second player's name
     """
+    pairings = []
+    cursor = kw['cursor']
+    cursor.execute('select * from standings')
+    players = cursor.fetchmany(2)
+    while players:
+        (p1, p2) = players
+        pairings.append((p1['id'], p1['name'], p2['id'], p2['name']))
+        players = cursor.fetchmany(2)
+    return pairings
