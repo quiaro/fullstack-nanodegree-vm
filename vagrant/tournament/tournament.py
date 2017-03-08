@@ -30,23 +30,23 @@ def connect():
 @setup_tear_db
 def deleteMatches(**kw):
     """Remove all the match records from the database."""
-    kw['cursor'].execute('delete from match')
+    kw['cursor'].execute('delete from Matches')
     kw['db'].commit()
 
 
 @setup_tear_db
 def deletePlayers(**kw):
     """Remove all the player records from the database."""
-    kw['cursor'].execute('delete from player')
+    kw['cursor'].execute('delete from Players')
     kw['db'].commit()
 
 
 @setup_tear_db
 def countPlayers(**kw):
     """Returns the number of players currently registered."""
-    kw['cursor'].execute('select count(*) as num_players from player')
-    num = kw['cursor'].fetchone()
-    return int(num['num_players'])
+    kw['cursor'].execute('select count(*) as num_players from Players')
+    row = kw['cursor'].fetchone()
+    return int(row['num_players'])
 
 
 @setup_tear_db
@@ -59,7 +59,7 @@ def registerPlayer(name, **kw):
     Args:
       name: the player's full name (need not be unique).
     """
-    kw['cursor'].execute('insert into player (name) values (%s)', (name,))
+    kw['cursor'].execute('insert into Players (name) values (%s)', (name,))
     kw['db'].commit()
 
 
@@ -77,7 +77,7 @@ def playerStandings(**kw):
         wins: the number of matches the player has won
         matches: the number of matches the player has played
     """
-    kw['cursor'].execute('select * from standings')
+    kw['cursor'].execute('select * from Standings')
     return kw['cursor'].fetchall()
 
 
@@ -90,7 +90,7 @@ def reportMatch(winner, loser, **kw):
       loser:  the id number of the player who lost
     """
     kw['cursor'].execute(
-        'insert into match (winner, loser) values (%s, %s)', (winner, loser))
+        'insert into Matches (winner, loser) values (%s, %s)', (winner, loser))
     kw['db'].commit()
 
 
@@ -112,7 +112,7 @@ def swissPairings(**kw):
     """
     pairings = []
     cursor = kw['cursor']
-    cursor.execute('select * from standings')
+    cursor.execute('select * from Standings')
     players = cursor.fetchmany(2)
     while players:
         (p1, p2) = players

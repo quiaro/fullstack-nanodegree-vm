@@ -6,45 +6,47 @@
 -- You can write comments in this file by starting them with two dashes, like
 -- these lines here.
 
+-- Create database tournament. The schema currently supports only one
+-- tournament at a time.
 DROP DATABASE tournament;
 CREATE DATABASE tournament;
 \c tournament;
 
-CREATE TABLE player  (
+CREATE TABLE Players  (
   id SERIAL PRIMARY KEY,
   name TEXT
 );
 
-CREATE TABLE match (
+CREATE TABLE Matches (
   id SERIAL PRIMARY KEY,
-  winner INTEGER REFERENCES player(id) ON DELETE SET NULL,
-  loser INTEGER REFERENCES player(id) ON DELETE SET NULL
+  winner INTEGER REFERENCES Players(id) ON DELETE SET NULL,
+  loser INTEGER REFERENCES Players(id) ON DELETE SET NULL
 );
 
 -- Returns a list of all the players with the number of wins
 -- and losses respectively.
-CREATE VIEW player_record AS
-select player.id,
+CREATE VIEW Players_Records AS
+select Players.id,
        coalesce(wins.total, 0) as wins,
        coalesce(losses.total, 0) as losses
-    from player left join (
+    from Players left join (
       select winner, count(*) as total
-      from match
+      from Matches
       group by winner
-    ) as wins on player.id = wins.winner
+    ) as wins on Players.id = wins.winner
      left join (
       select loser, count(*) as total
-      from match
+      from Matches
       group by loser
-    ) as losses on player.id = losses.loser;
+    ) as losses on Players.id = losses.loser;
 
 -- Returns a list of all the players with the number of wins
 -- and total matches they've played sorted by number of wins.
-CREATE VIEW standings AS
-  select player.id,
-         player.name,
-         player_record.wins,
-         player_record.wins + player_record.losses as matches
-    from player, player_record
-    where player.id = player_record.id
-    order by player_record.wins desc;
+CREATE VIEW Standings AS
+  select Players.id,
+         Players.name,
+         Players_Records.wins,
+         Players_Records.wins + Players_Records.losses as matches
+    from Players, Players_Records
+    where Players.id = Players_Records.id
+    order by Players_Records.wins desc;
