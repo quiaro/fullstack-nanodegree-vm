@@ -1,7 +1,11 @@
 apt-get -qqy update
-apt-get -qqy install postgresql python-psycopg2
-apt-get -qqy install python-flask python-sqlalchemy
-apt-get -qqy install python-pip
+apt-get -qqy install postgresql
+apt-get purge -y python-pip
+wget https://bootstrap.pypa.io/get-pip.py
+python ./get-pip.py
+pip install flask
+pip install sqlalchemy
+pip install psycopg2
 pip install bleach
 pip install oauth2client
 pip install requests
@@ -17,9 +21,3 @@ su vagrant -c 'psql forum -f /vagrant/forum/forum.sql'
 
 vagrantTip="[35m[1mThe shared directory is located at /vagrant\nTo access your shared files: cd /vagrant(B[m"
 echo -e $vagrantTip > /etc/motd
-
-wget http://download.redis.io/redis-stable.tar.gz
-tar xvzf redis-stable.tar.gz
-cd redis-stable
-make
-make install
